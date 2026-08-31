@@ -1,0 +1,88 @@
+# API deployment (sections 37 and 38).
+#
+# API instances are stateless (section 2.3), so replicas scale purely with HTTP
+# traffic and any pod can serve any user's request.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-api
+  labels:
+    app.kubernetes.io/name: agent-api
+    app.kubernetes.io/part-of: ai-engineering-agent
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: agent-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: agent-api
+        app.kubernetes.io/part-of: ai-engineering-agent
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: api
+          image: agent-api:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: agent-config
+            - secretRef:
+                name: agent-secrets
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          # Liveness must not depend on PostgreSQL: a database blip should not
+          # restart every API pod in the cluster.
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: agent-api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: agent-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

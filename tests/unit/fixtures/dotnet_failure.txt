@@ -1,0 +1,18 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  OrderService -> D:\repo\src\OrderService\bin\Debug\net10.0\OrderService.dll
+  OrderService.Tests -> D:\repo\tests\OrderService.Tests\bin\Debug\net10.0\OrderService.Tests.dll
+Test run for D:\repo\tests\OrderService.Tests\bin\Debug\net10.0\OrderService.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.17]     OrderService.Tests.TempBugRepro.CancelOrder_AlreadyCancelled_IsIdempotent [FAIL]
+  Failed OrderService.Tests.TempBugRepro.CancelOrder_AlreadyCancelled_IsIdempotent [4 ms]
+  Error Message:
+   OrderService.Services.PaymentGatewayException : Order 20ae256e-efa9-4f85-881a-e606877d40cd has already been refunded; the gateway rejected the duplicate refund.
+  Stack Trace:
+     at OrderService.Services.PaymentService.RefundOrder(Order order) in D:\repo\src\OrderService\Services\PaymentService.cs:line 30
+   at OrderService.Services.OrderManagementService.CancelOrder(Guid id, String reason) in D:\repo\src\OrderService\Services\OrderService.cs:line 58
+   at OrderService.Tests.TempBugRepro.CancelOrder_AlreadyCancelled_IsIdempotent() in D:\repo\tests\OrderService.Tests\TempBugRepro.cs:line 17
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Failed!  - Failed:     1, Passed:     7, Skipped:     0, Total:     8, Duration: 26 ms - OrderService.Tests.dll (net10.0)

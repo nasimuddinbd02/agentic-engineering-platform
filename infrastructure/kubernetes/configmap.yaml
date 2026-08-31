@@ -1,0 +1,25 @@
+# Non-secret configuration (section 35).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-config
+data:
+  DATABASE_URL: "postgresql+asyncpg://agent@postgres:5432/agent"
+  REDIS_URL: "redis://redis:6379/0"
+
+  LLM_PROVIDER: "anthropic"
+  LLM_MODEL: "claude-opus-5"
+  LLM_EFFORT: "high"
+  LLM_MAX_TOKENS: "16000"
+
+  SCM_PROVIDER: "github"
+  CI_PROVIDER: "github_actions"
+
+  # Bounded autonomy (sections 22, 26 and 54).
+  MAX_AGENT_ITERATIONS: "3"
+  MAX_CI_ITERATIONS: "2"
+  TASK_LEASE_SECONDS: "900"
+  WORKER_CONCURRENCY: "2"
+  COMMAND_TIMEOUT_SECONDS: "600"
+
+  LOG_LEVEL: "INFO"

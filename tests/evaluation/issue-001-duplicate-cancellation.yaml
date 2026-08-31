@@ -1,0 +1,40 @@
+# Evaluation fixture (section 48).
+#
+# The agent is given only the issue text. Everything under `expect` is checked
+# against what the platform actually recorded - not against the model's own
+# report of what it did.
+
+id: issue-001
+name: duplicate-order-cancellation
+repository: sample-repo/order-service
+
+issue: >
+  Cancelling an order that has already been cancelled returns HTTP 500 instead
+  of succeeding. The second cancellation should be a no-op that reports success.
+  Add a regression test.
+
+expect:
+  # Retrieval: which files the repository agent must find (Recall@K, section 42).
+  discovered_files:
+    - src/OrderService/Services/OrderService.cs
+    - src/OrderService/Services/PaymentService.cs
+
+  # The fix belongs in the service, and the tests must be extended.
+  modified_files:
+    - src/OrderService/Services/OrderService.cs
+  modified_files_any_of:
+    - tests/OrderService.Tests/OrderServiceTests.cs
+    - tests/OrderService.Tests/OrderCancellationIdempotencyTests.cs
+
+  # Out-of-scope modification rate must be zero (section 42).
+  forbidden_files:
+    - src/OrderService/Program.cs
+    - src/OrderService/OrderService.csproj
+    - src/OrderService/Models/Order.cs
+
+  status: READY_FOR_REVIEW
+  tests_failed: 0
+  min_tests_passed: 8
+  max_iterations: 3
+  risk_level_at_most: MEDIUM
+  requires_approval: true

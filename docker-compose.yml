@@ -1,0 +1,109 @@
+# Local Docker environment (sections 34 and 36, Mode B).
+#
+#   docker compose up -d postgres redis     # Mode A: infrastructure only
+#   docker compose up -d                    # Mode B: everything in containers
+#
+# Mode A is the debugging mode: run the API and worker from Python on the host
+# and let only PostgreSQL and Redis live in Docker.
+
+name: ai-engineering-agent
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: agent
+      POSTGRES_PASSWORD: agent
+      POSTGRES_DB: agent
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agent -d agent"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/api.Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://agent:agent@postgres:5432/agent
+      REDIS_URL: redis://redis:6379/0
+      LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-claude-opus-5}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/worker.Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://agent:agent@postgres:5432/agent
+      REDIS_URL: redis://redis:6379/0
+      LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-claude-opus-5}
+      SCM_PROVIDER: ${SCM_PROVIDER:-local}
+      CI_PROVIDER: ${CI_PROVIDER:-none}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_REPOSITORY: ${GITHUB_REPOSITORY:-}
+      WORKSPACE_ROOT: /workspaces
+      ARTIFACT_ROOT: /artifacts
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-2}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - worker-workspaces:/workspaces
+      - worker-artifacts:/artifacts
+      # The repository the agent works on. Mount your own checkout here and set
+      # repository_path to /repositories/<name> when submitting a task.
+      - ./.sandbox:/repositories
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # `docker compose up --scale worker=3` is the whole of section 38.
+    deploy:
+      replicas: 1
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: ../../infrastructure/docker/web.Dockerfile
+    environment:
+      # Reached from the browser, so it must be the host-visible address.
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  postgres-data:
+  redis-data:
+  worker-workspaces:
+  worker-artifacts:

@@ -1,0 +1,81 @@
+# Services and ingress (section 37).
+#
+# The worker has no Service: nothing calls it. It pulls from the queue, which
+# is what makes worker replicas independently scalable.
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-api
+  labels:
+    app.kubernetes.io/name: agent-api
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: agent-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-web
+  labels:
+    app.kubernetes.io/name: agent-web
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: agent-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: agent
+  annotations:
+    # SSE must not be buffered or the timeline arrives in one lump at the end.
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+spec:
+  rules:
+    - host: agent.internal
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: agent-api
+                port:
+                  number: 80
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: agent-api
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: agent-web
+                port:
+                  number: 80
+---
+# Workers only make outbound connections; nothing should be able to reach them.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: agent-worker-no-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: agent-worker
+  policyTypes:
+    - Ingress
+  ingress: []

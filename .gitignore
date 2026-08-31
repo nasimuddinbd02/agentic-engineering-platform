@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+workspaces/
+artifacts/
+data/
+node_modules/
+.next/
+bin/
+obj/
+.sandbox/

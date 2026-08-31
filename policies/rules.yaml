@@ -1,0 +1,85 @@
+# Deterministic policy rules (section 25).
+#
+# The model may classify intent, but authorization is decided here, in code, by
+# matching paths and content.  Rules are evaluated in order; the strongest
+# action wins (BLOCK > HUMAN_APPROVAL > ALLOW).
+#
+#   patterns: glob matched against the file's basename
+#   paths:    substring matched against the repository-relative path
+#   content:  regular expression matched against the added lines of the diff
+
+rules:
+  - name: block-secrets
+    description: Never let the agent add or modify credential material.
+    patterns:
+      - ".env"
+      - "*.pem"
+      - "*.pfx"
+      - "*.key"
+      - "*credentials*"
+      - "*secrets*"
+    action: BLOCK
+    risk: HIGH
+
+  - name: block-committed-secret-values
+    description: Catch a secret pasted into an otherwise ordinary file.
+    content:
+      - "(?i)(aws_secret_access_key|private[_-]?key)\\s*[:=]"
+      - "-----BEGIN [A-Z ]*PRIVATE KEY-----"
+      - "(?i)\\b(password|passwd|pwd)\\s*[:=]\\s*[\"'][^\"'{}$]{6,}[\"']"
+    action: BLOCK
+    risk: HIGH
+
+  - name: production-infrastructure
+    description: Production infrastructure is out of scope for the POC (section 54).
+    paths:
+      - "infra/prod/"
+      - "deploy/production/"
+      - "kubernetes/production/"
+    action: BLOCK
+    risk: HIGH
+
+  - name: sensitive-auth
+    description: Authentication and security code always needs a human.
+    paths:
+      - "Authentication/"
+      - "Authorization/"
+      - "Security/"
+      - "Identity/"
+    action: HUMAN_APPROVAL
+    risk: HIGH
+
+  - name: ci-workflow-changes
+    description: The agent may propose CI changes, but a person approves them.
+    paths:
+      - ".github/workflows/"
+      - "azure-pipelines"
+    action: HUMAN_APPROVAL
+    risk: MEDIUM
+
+  - name: database-migrations
+    description: Schema changes are irreversible in ways tests do not catch.
+    paths:
+      - "Migrations/"
+      - "migrations/"
+    action: HUMAN_APPROVAL
+    risk: MEDIUM
+
+  - name: dependency-manifest
+    description: Adding dependencies changes the supply chain.
+    patterns:
+      - "*.csproj"
+      - "packages.config"
+      - "package.json"
+      - "pyproject.toml"
+      - "requirements.txt"
+    action: HUMAN_APPROVAL
+    risk: MEDIUM
+
+# Thresholds evaluated alongside the rules above.
+thresholds:
+  # More files than this in one task means the change has sprawled (section 22).
+  max_files_changed: 12
+  max_lines_changed: 800
+  # A change touching this many files is at least MEDIUM risk.
+  medium_risk_files: 4

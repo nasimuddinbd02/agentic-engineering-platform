@@ -1,0 +1,102 @@
+# Worker deployment (sections 37, 38 and 39).
+#
+# Workers scale with agent workload, not HTTP traffic, which is why they are a
+# separate deployment. Each pod keeps its task workspaces on local ephemeral
+# storage: the workspace is disposable, the durable state is in PostgreSQL.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-worker
+  labels:
+    app.kubernetes.io/name: agent-worker
+    app.kubernetes.io/part-of: ai-engineering-agent
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: agent-worker
+  strategy:
+    # A rolling update must not evict a worker mid-task; drain first.
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: agent-worker
+        app.kubernetes.io/part-of: ai-engineering-agent
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      # Give an in-flight task time to reach a checkpoint. If the pod dies
+      # anyway, the lease expires and another worker reclaims the task.
+      terminationGracePeriodSeconds: 900
+      containers:
+        - name: worker
+          image: agent-worker:0.1.0
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: agent-config
+            - secretRef:
+                name: agent-secrets
+          env:
+            - name: WORKSPACE_ROOT
+              value: /workspaces
+            - name: ARTIFACT_ROOT
+              value: /artifacts
+            - name: WORKER_CONCURRENCY
+              value: "2"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+          volumeMounts:
+            - name: workspaces
+              mountPath: /workspaces
+            - name: artifacts
+              mountPath: /artifacts
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        # Ephemeral on purpose (section 39): a lost workspace is recreated.
+        - name: workspaces
+          emptyDir:
+            sizeLimit: 20Gi
+        - name: artifacts
+          emptyDir:
+            sizeLimit: 5Gi
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: agent-worker
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: agent-worker
+  minReplicas: 1
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 65
+  behavior:
+    scaleDown:
+      # Agent tasks are long. Scaling down eagerly would kill work in progress.
+      stabilizationWindowSeconds: 600

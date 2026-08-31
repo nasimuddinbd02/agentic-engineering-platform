@@ -1,0 +1,63 @@
+# CI pipeline for the sample service (section 26).
+#
+# The agent pushes agent/TASK-* branches; this workflow is what the CI provider
+# polls. If it fails, the CI debugging agent gets the logs and one bounded
+# chance to fix the cause.
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+      - 'agent/**'
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/TestResults/*.trx'
+          if-no-files-found: ignore
+
+  policy:
+    # A second opinion on the agent's diff, enforced by the pipeline rather
+    # than by the agent itself.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reject committed secrets
+        run: |
+          if git ls-files | grep -E '(^|/)\.env$|\.pem$|\.pfx$|credentials'; then
+            echo "::error::secret-bearing file committed"
+            exit 1
+          fi
+          echo "no secret-bearing files found"
