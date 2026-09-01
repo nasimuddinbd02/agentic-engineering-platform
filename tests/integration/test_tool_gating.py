@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from agents.base import Agent
-from core.errors import PolicyViolationError
+from core.errors import PolicyViolationError, ToolValidationError
 from graph.context import WorkflowContext
 from llm.scripted_provider import ScriptedTurn
 from persistence.db import session_scope
@@ -70,7 +70,7 @@ def test_only_implementation_debugging_testing_and_ci_can_write() -> None:
 
 
 def test_registry_rejects_an_unknown_agent() -> None:
-    with pytest.raises(Exception):
+    with pytest.raises(ToolValidationError):
         ToolRegistry().for_agent("nonexistent")
 
 

@@ -82,7 +82,9 @@ def string_schema(**properties: str) -> dict[str, Any]:
     """Shorthand for the common all-strings, all-required schema."""
     return {
         "type": "object",
-        "properties": {name: {"type": "string", "description": desc} for name, desc in properties.items()},
+        "properties": {
+            name: {"type": "string", "description": desc} for name, desc in properties.items()
+        },
         "required": list(properties),
         "additionalProperties": False,
     }

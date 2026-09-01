@@ -48,13 +48,15 @@ async def submit(base_url: str, repository_path: Path, issue: str, key: str | No
 
 
 async def watch(base_url: str, task_id: str) -> None:
-    async with httpx.AsyncClient(base_url=base_url, timeout=None) as client:
-        async with client.stream("GET", f"/api/v1/tasks/{task_id}/events") as response:
-            async for line in response.aiter_lines():
-                if line.startswith("event: "):
-                    print(f"  {line.removeprefix('event: ')}")
-                if "STREAM_END" in line:
-                    break
+    async with (
+        httpx.AsyncClient(base_url=base_url, timeout=None) as client,
+        client.stream("GET", f"/api/v1/tasks/{task_id}/events") as response,
+    ):
+        async for line in response.aiter_lines():
+            if line.startswith("event: "):
+                print(f"  {line.removeprefix('event: ')}")
+            if "STREAM_END" in line:
+                break
 
     async with httpx.AsyncClient(base_url=base_url, timeout=30) as client:
         detail = (await client.get(f"/api/v1/tasks/{task_id}")).json()["task"]

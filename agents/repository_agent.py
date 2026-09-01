@@ -54,7 +54,9 @@ class RepositoryAgent(Agent):
         outcome = await self.run(system=system, user_message=user, tool_context=tool_context)
         payload = parse_json_payload(outcome)
 
-        files = [str(path).strip() for path in payload.get("relevant_files", []) if str(path).strip()]
+        files = [
+            str(path).strip() for path in payload.get("relevant_files", []) if str(path).strip()
+        ]
         findings = [str(item) for item in payload.get("findings", []) if str(item).strip()]
         entry_point = str(payload.get("entry_point", "")).strip()
         if entry_point and entry_point not in files:

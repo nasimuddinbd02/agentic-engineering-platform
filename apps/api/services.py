@@ -142,7 +142,10 @@ class TaskService:
 
     async def reject(self, task_id: str, *, decided_by: str | None, reason: str | None) -> Task:
         task = await self.get(task_id)
-        if task.status in TERMINAL_STATUSES and task.status != TaskStatus.HUMAN_REVIEW_REQUIRED.value:
+        if (
+            task.status in TERMINAL_STATUSES
+            and task.status != TaskStatus.HUMAN_REVIEW_REQUIRED.value
+        ):
             raise InvalidTaskTransitionError(f"task {task_id} is already {task.status}")
         approvals = ApprovalRepository(self.session)
         pending = await approvals.pending_for(task_id)
@@ -151,7 +154,9 @@ class TaskService:
                 pending.id, status="REJECTED", decided_by=decided_by, reason=reason
             )
         await self.tasks.set_status(task_id, TaskStatus.REJECTED, error=reason)
-        await self._publish(task_id, EventType.APPROVAL_REJECTED, decided_by=decided_by, reason=reason)
+        await self._publish(
+            task_id, EventType.APPROVAL_REJECTED, decided_by=decided_by, reason=reason
+        )
         return await self.get(task_id)
 
     async def cancel(self, task_id: str, *, reason: str | None = None) -> Task:

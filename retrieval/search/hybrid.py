@@ -63,7 +63,7 @@ class HybridRetriever:
                 contribution = 1.0 / (RRF_K + position)
                 if key in fused:
                     chunk, score, sources = fused[key]
-                    fused[key] = (chunk, score + contribution, sources + [item.source])
+                    fused[key] = (chunk, score + contribution, [*sources, item.source])
                 else:
                     fused[key] = (item.chunk, contribution, [item.source])
 

@@ -17,7 +17,7 @@ from apps.api.main import create_app
 from core.config import Settings
 from core.domain import TaskStatus
 from infrastructure import build_coordination, reset_coordination
-from persistence.db import create_schema, dispose_engine, get_session_factory, session_scope
+from persistence.db import create_schema, dispose_engine, session_scope
 from persistence.repositories import TaskRepository
 
 

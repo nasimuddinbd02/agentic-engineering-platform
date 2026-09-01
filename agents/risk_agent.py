@@ -37,7 +37,9 @@ class RiskAgent(Agent):
         system = self.system_prompt()
         user = (
             f"Engineering issue:\n{state['issue']}\n\n"
-            f"Candidate files:\n" + ("\n".join(f"- {path}" for path in files) or "- (none)") + "\n\n"
+            f"Candidate files:\n"
+            + ("\n".join(f"- {path}" for path in files) or "- (none)")
+            + "\n\n"
             f"Repository findings:\n{context_notes or '- (none)'}\n\n"
             "Assess the risk of making this change."
         )

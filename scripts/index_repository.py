@@ -29,9 +29,7 @@ async def run(path: Path, url: str | None, query: str | None) -> None:
     await create_schema(settings)
 
     async with session_scope(settings) as session:
-        repository = await index_repository(
-            session, url=url or path.as_uri(), path=path
-        )
+        repository = await index_repository(session, url=url or path.as_uri(), path=path)
         print(f"indexed {repository.url}")
         print(f"  chunks: {repository.chunk_count}")
         print(f"  languages: {', '.join(repository.languages) or '(none)'}")

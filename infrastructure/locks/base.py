@@ -7,8 +7,8 @@ guard; ``TaskRepository.claim`` is the durable half.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 
 class LockManager(ABC):

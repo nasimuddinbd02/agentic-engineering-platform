@@ -10,7 +10,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 import sys
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator
 from pathlib import Path
 
 import pytest
@@ -22,9 +22,12 @@ from core.config import Settings  # noqa: E402
 from graph.context import WorkflowContext  # noqa: E402
 from infrastructure import build_coordination, reset_coordination  # noqa: E402
 from llm.scripted_provider import ScriptedLLMProvider  # noqa: E402
-from persistence.db import create_schema, dispose_engine  # noqa: E402
+from persistence.db import (  # noqa: E402
+    create_schema,
+    dispose_engine,
+    session_scope,
+)
 from persistence.repositories import TaskRepository  # noqa: E402
-from persistence.db import session_scope  # noqa: E402
 from policies.evaluator import PolicyEngine  # noqa: E402
 from providers.ci.noop import NoopCIProvider  # noqa: E402
 from providers.scm.local import LocalGitProvider  # noqa: E402

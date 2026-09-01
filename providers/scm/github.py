@@ -50,9 +50,7 @@ class GitHubProvider(SourceControlProvider):
         )
         if result.exit_code != 0:
             # Never echo the command: it carries the token.
-            raise TransientInfrastructureError(
-                f"git push failed with exit code {result.exit_code}"
-            )
+            raise TransientInfrastructureError(f"git push failed with exit code {result.exit_code}")
         log.info("scm.github.pushed", branch=branch, repository=self.repository)
         return f"https://github.com/{self.repository}/tree/{branch}"
 

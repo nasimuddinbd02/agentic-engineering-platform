@@ -94,7 +94,9 @@ class WorkspaceManager:
         log.info("workspace.created", task_id=task_id, path=str(target), branch=branch)
         return workspace
 
-    async def adopt(self, task_id: str, path: Path, branch: str, repository_path: Path) -> Workspace:
+    async def adopt(
+        self, task_id: str, path: Path, branch: str, repository_path: Path
+    ) -> Workspace:
         """Re-register an existing workspace after a worker restart (section 55)."""
         workspace = Workspace(
             task_id=task_id,

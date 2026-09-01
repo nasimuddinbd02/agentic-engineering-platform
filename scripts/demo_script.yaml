@@ -1,0 +1,148 @@
+# Offline demo script for LLM_PROVIDER=scripted (LLM_SCRIPT_PATH).
+#
+# This is NOT a model. It replays a fixed set of agent turns so the control
+# plane - worktree, tool gates, policy, real `dotnet test`, the bounded
+# debugging loop, commit, PR, approval - can be demonstrated end to end with no
+# API key and no network.
+#
+# The first implementation attempt is deliberately WRONG: it returns
+# NotCancellable for an already-cancelled order, which fails the regression test
+# the testing agent writes. That forces the debugging loop to run, which is the
+# behaviour worth watching (section 22).
+#
+# Set LLM_PROVIDER=anthropic to have a real model do this instead.
+
+planner:
+  - json:
+      summary: Make order cancellation idempotent
+      steps:
+        - Find the cancellation API
+        - Inspect OrderManagementService.CancelOrder
+        - Check how PaymentService handles a repeated refund
+        - Return success when the order is already cancelled
+        - Add a regression test
+      acceptance_criteria:
+        - Cancelling an already cancelled order returns success, not HTTP 500
+        - The payment gateway is not asked to refund the same order twice
+        - Existing tests continue to pass
+
+repository:
+  - tool: search_code
+    arguments:
+      pattern: CancelOrder
+  - tool: read_file
+    arguments:
+      path: src/OrderService/Services/OrderService.cs
+  - tool: read_file
+    arguments:
+      path: src/OrderService/Services/PaymentService.cs
+  - json:
+      relevant_files:
+        - src/OrderService/Services/OrderService.cs
+        - src/OrderService/Services/PaymentService.cs
+        - src/OrderService/Controllers/OrdersController.cs
+        - tests/OrderService.Tests/OrderServiceTests.cs
+      findings:
+        - CancelOrder refunds unconditionally, so a second call throws PaymentGatewayException
+        - PaymentService.RefundOrder rejects a duplicate refund for the same order
+        - OrdersController turns the escaping exception into HTTP 500
+      entry_point: src/OrderService/Services/OrderService.cs
+
+risk:
+  - json:
+      risk_level: LOW
+      reasons:
+        - A guard clause in one service method, with tests already covering it
+      blast_radius: Only the cancellation path of the order service
+
+implementation:
+  - tool: read_file
+    arguments:
+      path: src/OrderService/Services/OrderService.cs
+  # Deliberately the wrong outcome - the debugging loop has to correct it.
+  # Double-quoted scalars keep the leading indentation exact; a `|-` block would
+  # strip it against the first line and produce misaligned C#.
+  - tool: apply_patch
+    arguments:
+      path: src/OrderService/Services/OrderService.cs
+      old_text: "        _paymentService.RefundOrder(order);"
+      new_text: "        if (order.Status == OrderStatus.Cancelled)\n        {\n            return CancellationResult.NotCancellable(id, order.Status);\n        }\n\n        _paymentService.RefundOrder(order);"
+  - json:
+      summary: Reject cancellation when the order is already cancelled
+      changed_files:
+        - src/OrderService/Services/OrderService.cs
+      notes_for_tests:
+        - Cancelling twice must not reach the payment gateway
+
+testing:
+  - tool: create_file
+    arguments:
+      path: tests/OrderService.Tests/OrderCancellationIdempotencyTests.cs
+      content: |
+        using OrderService.Models;
+        using OrderService.Repositories;
+        using OrderService.Services;
+        using Xunit;
+
+        namespace OrderService.Tests;
+
+        public class OrderCancellationIdempotencyTests
+        {
+            private static (OrderManagementService Service, Order Order) CreateService()
+            {
+                var order = new Order { CustomerId = "customer-1", Total = 10m, Status = OrderStatus.Pending };
+                var repository = new InMemoryOrderRepository(new[] { order });
+                return (new OrderManagementService(repository, new PaymentService()), order);
+            }
+
+            [Fact]
+            public void CancelOrder_AlreadyCancelled_ReturnsSuccess()
+            {
+                var (service, order) = CreateService();
+                service.CancelOrder(order.Id);
+
+                var second = service.CancelOrder(order.Id);
+
+                Assert.Equal(CancellationOutcome.Cancelled, second.Outcome);
+                Assert.Equal(OrderStatus.Cancelled, order.Status);
+            }
+
+            [Fact]
+            public void CancelOrder_CalledThreeTimes_DoesNotThrow()
+            {
+                var (service, order) = CreateService();
+
+                service.CancelOrder(order.Id);
+                service.CancelOrder(order.Id);
+                var third = service.CancelOrder(order.Id);
+
+                Assert.Equal(CancellationOutcome.Cancelled, third.Outcome);
+            }
+        }
+  - json:
+      summary: Added idempotency regression tests
+      test_cases:
+        - Cancelling an already cancelled order returns success
+        - Cancelling three times does not throw
+      test_files:
+        - tests/OrderService.Tests/OrderCancellationIdempotencyTests.cs
+
+debugging:
+  - tool: read_file
+    arguments:
+      path: src/OrderService/Services/OrderService.cs
+  - tool: apply_patch
+    arguments:
+      path: src/OrderService/Services/OrderService.cs
+      old_text: "            return CancellationResult.NotCancellable(id, order.Status);\n        }\n\n        _paymentService.RefundOrder(order);"
+      new_text: "            // Cancellation is idempotent: the order is already cancelled and has\n            // already been refunded, so report success rather than refunding twice.\n            return CancellationResult.Cancelled(id);\n        }\n\n        _paymentService.RefundOrder(order);"
+  - json:
+      analysis: >-
+        The guard returned NotCancellable, but cancelling an order that is
+        already cancelled is a successful no-op, not a conflict. Returning
+        Cancelled makes the operation idempotent and keeps the gateway from
+        being asked for a second refund.
+      fix_applied: true
+      changed_files:
+        - src/OrderService/Services/OrderService.cs
+      confidence: HIGH

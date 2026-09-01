@@ -50,9 +50,7 @@ async def run_task(settings, coordination, scripted_llm, script, task_id) -> dic
 async def test_happy_path_reaches_review(
     database, coordination, scripted_llm, seeded_task, settings
 ):
-    result = await run_task(
-        settings, coordination, scripted_llm, happy_path_script(), seeded_task
-    )
+    result = await run_task(settings, coordination, scripted_llm, happy_path_script(), seeded_task)
 
     assert result["status"] == TaskStatus.READY_FOR_REVIEW.value
     assert result["tests"]["failed"] == 0

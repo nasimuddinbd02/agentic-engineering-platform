@@ -14,9 +14,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # persistence / coordination
     database_url: str = "sqlite+aiosqlite:///./data/agent.db"
@@ -28,6 +26,8 @@ class Settings(BaseSettings):
     llm_model: str = "claude-opus-5"
     llm_effort: str = "high"
     llm_max_tokens: int = 16000
+    #: Only for LLM_PROVIDER=scripted - a YAML script replayed instead of a model.
+    llm_script_path: str = ""
 
     # source control / ci
     scm_provider: str = "local"

@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from tools.base import Tool, ToolContext, ToolResult
 from tools.runner import CommandResult, run_command
@@ -118,7 +118,9 @@ async def run_dotnet_build(root: Path, timeout: int) -> CommandResult:
     )
 
 
-async def run_dotnet_test(root: Path, timeout: int, filter_expression: str | None = None) -> CommandResult:
+async def run_dotnet_test(
+    root: Path, timeout: int, filter_expression: str | None = None
+) -> CommandResult:
     command = ["dotnet", "test", "--nologo", "-v", "minimal"]
     if filter_expression:
         command += ["--filter", filter_expression]
@@ -128,7 +130,7 @@ async def run_dotnet_test(root: Path, timeout: int, filter_expression: str | Non
 class BuildTool(Tool):
     name = "run_build"
     description = "Compile the project in the task workspace (dotnet build)."
-    input_schema: dict[str, Any] = {
+    input_schema: ClassVar[dict[str, Any]] = {
         "type": "object",
         "properties": {},
         "additionalProperties": False,
@@ -157,7 +159,7 @@ class RunTestsTool(Tool):
         "Run the project's automated tests (dotnet test). Returns pass/fail counts and "
         "the failing test names with their exception messages."
     )
-    input_schema: dict[str, Any] = {
+    input_schema: ClassVar[dict[str, Any]] = {
         "type": "object",
         "properties": {
             "filter": {

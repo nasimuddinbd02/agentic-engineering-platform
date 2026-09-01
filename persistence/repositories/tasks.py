@@ -135,9 +135,7 @@ class TaskRepository:
         )
         # synchronize_session=False: the WHERE clause is evaluated by the
         # database, not re-evaluated in Python against identity-mapped objects.
-        result = await self.session.execute(
-            stmt.execution_options(synchronize_session=False)
-        )
+        result = await self.session.execute(stmt.execution_options(synchronize_session=False))
         if result.rowcount == 0:
             return None
         task = await self.session.get(Task, task_id, populate_existing=True)

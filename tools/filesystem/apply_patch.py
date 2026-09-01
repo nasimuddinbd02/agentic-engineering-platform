@@ -8,7 +8,7 @@ debugging loop; anchors do not.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 
 from core.errors import WorkspaceViolationError
 from tools.base import Tool, ToolContext, ToolResult
@@ -18,9 +18,7 @@ def _count_changes(before: str, after: str) -> tuple[int, int]:
     import difflib
 
     added = removed = 0
-    for line in difflib.unified_diff(
-        before.splitlines(), after.splitlines(), lineterm="", n=0
-    ):
+    for line in difflib.unified_diff(before.splitlines(), after.splitlines(), lineterm="", n=0):
         if line.startswith("+") and not line.startswith("+++"):
             added += 1
         elif line.startswith("-") and not line.startswith("---"):
@@ -35,7 +33,7 @@ class ApplyPatchTool(Tool):
         "in the file, including indentation. Use create_file for new files."
     )
     mutating = True
-    input_schema: dict[str, Any] = {
+    input_schema: ClassVar[dict[str, Any]] = {
         "type": "object",
         "properties": {
             "path": {"type": "string", "description": "Repository-relative file path."},
@@ -101,7 +99,7 @@ class CreateFileTool(Tool):
         "use apply_patch to modify an existing file."
     )
     mutating = True
-    input_schema: dict[str, Any] = {
+    input_schema: ClassVar[dict[str, Any]] = {
         "type": "object",
         "properties": {
             "path": {"type": "string", "description": "Repository-relative file path."},

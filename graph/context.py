@@ -135,7 +135,12 @@ class WorkflowContext:
             return run.id
 
     async def finish_agent_run(
-        self, agent_run_id: str, *, status: str, error: str | None = None, usage: Usage | None = None
+        self,
+        agent_run_id: str,
+        *,
+        status: str,
+        error: str | None = None,
+        usage: Usage | None = None,
     ) -> None:
         async with session_scope(self.settings) as session:
             await AgentRunRepository(session).finish(

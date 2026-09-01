@@ -25,8 +25,10 @@ def after_risk(state: AgentState) -> str:
 
 def after_tests(state: AgentState) -> str:
     """PASS continues; FAIL debugs, but only while the budget and progress hold."""
-    if state.get("tests_failed", 0) == 0 and state.get("tests_passed", 0) >= 0 and state.get(
-        "test_run_ok", False
+    if (
+        state.get("tests_failed", 0) == 0
+        and state.get("tests_passed", 0) >= 0
+        and state.get("test_run_ok", False)
     ):
         return "security_policy"
 

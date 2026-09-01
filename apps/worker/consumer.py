@@ -25,7 +25,6 @@ from persistence.repositories import TaskRepository
 log = get_logger(__name__)
 
 
-
 class WorkerConsumer:
     def __init__(
         self,
@@ -55,7 +54,7 @@ class WorkerConsumer:
         # the worker from starting - the queue is the primary path.
         try:
             await self.sweep()
-        except Exception:  # noqa: BLE001
+        except Exception:
             log.exception("worker.initial_sweep_failed")
 
         recovery = asyncio.create_task(self._recovery_loop())
@@ -91,7 +90,8 @@ class WorkerConsumer:
         try:
             await self.executor.execute(item.task_id)
             await self.coordination.queue.ack(item)
-        except Exception:  # noqa: BLE001 - keep consuming
+        # A failing task must not stop the loop: nack it and keep consuming.
+        except Exception:
             log.exception("worker.task_failed", task_id=item.task_id)
             await self.coordination.queue.nack(item)
         finally:
@@ -109,7 +109,7 @@ class WorkerConsumer:
                 await self.sweep()
             except asyncio.CancelledError:
                 raise
-            except Exception:  # noqa: BLE001
+            except Exception:
                 log.exception("worker.recovery_failed")
             await asyncio.sleep(self.settings.queue_sweep_seconds)
 

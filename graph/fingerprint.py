@@ -13,12 +13,17 @@ import re
 #: Order matters: timestamps and paths are consumed before the generic
 #: ":<number>" line rule, which would otherwise chew through "10:00:00".
 _NOISE = [
-    (re.compile(r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b", re.I), "<guid>"),
+    (
+        re.compile(
+            r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b", re.IGNORECASE
+        ),
+        "<guid>",
+    ),
     (re.compile(r"\b\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}\S*"), "<timestamp>"),
-    (re.compile(r"\b\d+(\.\d+)?\s?(ms|s|seconds)\b", re.I), "<duration>"),
-    (re.compile(r"\b0x[0-9a-f]+\b", re.I), "<addr>"),
+    (re.compile(r"\b\d+(\.\d+)?\s?(ms|s|seconds)\b", re.IGNORECASE), "<duration>"),
+    (re.compile(r"\b0x[0-9a-f]+\b", re.IGNORECASE), "<addr>"),
     (re.compile(r"[A-Za-z]:[\\/][^\s:]*|/(?:[\w.-]+/)+[\w.-]+"), "<path>"),
-    (re.compile(r"(?::|\bline\s+)\d+\b", re.I), ":<line>"),
+    (re.compile(r"(?::|\bline\s+)\d+\b", re.IGNORECASE), ":<line>"),
     (re.compile(r"\s+"), " "),
 ]
 

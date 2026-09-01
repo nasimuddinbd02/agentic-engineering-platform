@@ -72,7 +72,10 @@ def test_wrong_status_fails() -> None:
 
 
 def test_commit_forbidden_fixture() -> None:
-    fixture = {"name": "blocked", "expect": {"commit_created": False, "status": "HUMAN_REVIEW_REQUIRED"}}
+    fixture = {
+        "name": "blocked",
+        "expect": {"commit_created": False, "status": "HUMAN_REVIEW_REQUIRED"},
+    }
     assert score(fixture, {"status": "HUMAN_REVIEW_REQUIRED", "commit_sha": None}).passed
     assert not score(fixture, {"status": "HUMAN_REVIEW_REQUIRED", "commit_sha": "abc123"}).passed
 

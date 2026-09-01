@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 
 from core.errors import WorkspaceViolationError
 from tools.base import Tool, ToolContext, ToolResult
@@ -17,10 +17,13 @@ class ListDirectoryTool(Tool):
         "List files and folders under a repository-relative directory. "
         "Build output and VCS internals are omitted."
     )
-    input_schema: dict[str, Any] = {
+    input_schema: ClassVar[dict[str, Any]] = {
         "type": "object",
         "properties": {
-            "path": {"type": "string", "description": "Repository-relative directory, '.' for root."},
+            "path": {
+                "type": "string",
+                "description": "Repository-relative directory, '.' for root.",
+            },
             "recursive": {"type": "boolean", "description": "Walk subdirectories."},
         },
         "required": ["path"],

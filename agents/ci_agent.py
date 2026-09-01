@@ -43,7 +43,7 @@ class CIAgent(Agent):
             f"CI iteration {state.get('ci_iteration', 0)} of {state.get('max_ci_iterations', 2)}\n\n"
             f"CI logs:\n{state.get('ci_logs', '')[:6000]}\n\n"
             f"Files changed by this task:\n"
-            + ("\n".join(f"- {path}" for path in state.get('modified_files', [])) or "- (none)")
+            + ("\n".join(f"- {path}" for path in state.get("modified_files", [])) or "- (none)")
             + "\n\nDiagnose the pipeline failure and fix it if it is a code defect."
         )
         outcome = await self.run(system=system, user_message=user, tool_context=tool_context)

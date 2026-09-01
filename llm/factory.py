@@ -24,6 +24,8 @@ def build_llm_provider(settings: Settings | None = None) -> LLMProvider:
     if provider == "scripted":
         from llm.scripted_provider import ScriptedLLMProvider
 
+        if settings.llm_script_path:
+            return ScriptedLLMProvider.from_file(settings.llm_script_path)
         return ScriptedLLMProvider()
 
     raise ConfigurationError(f"unknown LLM_PROVIDER: {settings.llm_provider}")

@@ -1,7 +1,7 @@
 # AI Software Engineering Agent
 
 An **engineering control plane around a coding-capable LLM**, implemented from
-`AI_Software_Engineering_Agent_POC_Architecture.md`.
+[AI_Software_Engineering_Agent_POC_Architecture.md](docs/AI_Software_Engineering_Agent_POC_Architecture.md).
 
 The model reasons. The platform decides what the model is allowed to do, runs
 the things whose answers must be trustworthy, records everything, and stops the
@@ -61,11 +61,22 @@ make api         # http://localhost:8000/docs
 make web         # http://localhost:3000
 ```
 
-Submit the sample issue and watch it work:
+> With `REDIS_URL=memory://` the queue lives inside one process, so run
+> `make run-local` instead of `make api` + `make worker`. Everything else is
+> identical; only Redis makes the two halves independently deployable.
+
+Submit the sample issue and follow the live event stream:
 
 ```bash
 make demo
 ```
+
+**No API key?** Set `LLM_PROVIDER=scripted` and
+`LLM_SCRIPT_PATH=./scripts/demo_script.yaml`. That replays a fixed set of agent
+turns - including a *deliberately wrong* first fix - so you can watch the real
+worktree, the real `dotnet test`, the debugging loop, the policy gate, the
+commit and the approval without calling a model. It is a stand-in for the
+model, not a simulation of the platform: every other component is the real one.
 
 ---
 
@@ -199,6 +210,10 @@ machine this was built on. They are the decisions worth arguing with.
 6. **`core/` and `llm/` exist**, which §5's tree does not list — configuration,
    logging, domain vocabulary, and the provider adapter needed a home that was
    not an agent.
+7. **No `tools/ci/`.** §5 lists it, but CI already has a provider abstraction
+   (§28) that the `ci_validation` node calls directly. A tool wrapper over it
+   would be indirection with no caller, so it was left out rather than shipped
+   empty.
 
 ## Not built (deliberately out of POC scope, §54)
 

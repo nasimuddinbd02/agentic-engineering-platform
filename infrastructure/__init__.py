@@ -85,9 +85,7 @@ def build_coordination(
 
     redis = get_redis(settings)
     return Coordination(
-        queue=RedisTaskQueue(
-            redis, settings.queue_name, consumer_name or worker_identity("api")
-        ),
+        queue=RedisTaskQueue(redis, settings.queue_name, consumer_name or worker_identity("api")),
         events=RedisEventBus(redis, settings.event_channel_prefix),
         locks=RedisLockManager(redis),
         backend="redis",

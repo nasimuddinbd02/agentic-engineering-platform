@@ -22,7 +22,7 @@ class MemoryTaskQueue(TaskQueue):
     async def receive(self, timeout_seconds: float = 5.0) -> QueuedTask | None:
         try:
             task_id = await asyncio.wait_for(self._queue.get(), timeout=timeout_seconds)
-        except (TimeoutError, asyncio.TimeoutError):
+        except TimeoutError:
             return None
         self._in_flight.add(task_id)
         return QueuedTask(task_id=task_id, receipt=task_id)

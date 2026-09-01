@@ -6,8 +6,8 @@ registry, nothing in module scope that a second API instance would not have.
 
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -69,6 +69,4 @@ if __name__ == "__main__":  # pragma: no cover
     import uvicorn
 
     settings = get_settings()
-    uvicorn.run(
-        "apps.api.main:app", host="0.0.0.0", port=settings.api_port, reload=False
-    )
+    uvicorn.run("apps.api.main:app", host="0.0.0.0", port=settings.api_port, reload=False)

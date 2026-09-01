@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 from collections import defaultdict
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from llm.base import LLMProvider, LLMResponse, ToolInvocation, ToolSpec, Usage
@@ -65,9 +66,7 @@ class ScriptedLLMProvider(LLMProvider):
             for turn in turns or []:
                 if "tool" in turn:
                     parsed.append(
-                        ScriptedTurn(
-                            tool_calls=[(turn["tool"], dict(turn.get("arguments", {})))]
-                        )
+                        ScriptedTurn(tool_calls=[(turn["tool"], dict(turn.get("arguments", {})))])
                     )
                 elif "json" in turn:
                     parsed.append(ScriptedTurn.json(turn["json"]))
