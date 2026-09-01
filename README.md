@@ -13,6 +13,11 @@ Issue → Plan → Repository intelligence → Risk/Policy → Implementation
       → Commit → CI → PR → Human approval
 ```
 
+**New to the project?** Start with
+[docs/Running-the-Application.md](docs/Running-the-Application.md) to get it
+running in five minutes, then [docs/](docs/README.md) for the ten process guides
+that explain how each part works.
+
 ---
 
 ## What is actually built
