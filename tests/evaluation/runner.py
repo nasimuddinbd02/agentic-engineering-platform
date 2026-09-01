@@ -30,8 +30,12 @@ class EvaluationOutcome:
     passed: bool
     metrics: dict[str, Any] = field(default_factory=dict)
     failures: list[str] = field(default_factory=list)
+    skipped: bool = False
+    skip_reason: str = ""
 
     def render(self) -> str:
+        if self.skipped:
+            return f"[SKIP] {self.fixture}\n    {self.skip_reason}"
         status = "PASS" if self.passed else "FAIL"
         lines = [f"[{status}] {self.fixture}"]
         for key, value in self.metrics.items():
@@ -91,7 +95,10 @@ def score(fixture: dict[str, Any], observed: dict[str, Any]) -> EvaluationOutcom
     if "tests_failed" in expect and observed.get("tests_failed", 0) != expect["tests_failed"]:
         failures.append(f"tests_failed was {observed.get('tests_failed')}")
 
-    if "min_tests_passed" in expect and observed.get("tests_passed", 0) < expect["min_tests_passed"]:
+    if (
+        "min_tests_passed" in expect
+        and observed.get("tests_passed", 0) < expect["min_tests_passed"]
+    ):
         failures.append(
             f"only {observed.get('tests_passed')} tests passed, "
             f"expected at least {expect['min_tests_passed']}"
@@ -181,6 +188,17 @@ async def run_fixture(fixture: dict[str, Any], repository_path: Path) -> Evaluat
     from persistence.repositories import EvaluationRepository, TaskRepository
 
     settings = get_settings()
+
+    # A fixture that measures a judgement call is meaningless against the
+    # offline scripted provider, which replays one script whatever the issue.
+    if fixture.get("requires_model") and settings.llm_provider.lower() == "scripted":
+        return EvaluationOutcome(
+            fixture=fixture.get("name", fixture.get("id", "unknown")),
+            passed=False,
+            skipped=True,
+            skip_reason="needs a real model (LLM_PROVIDER=scripted replays a fixed script)",
+        )
+
     await create_schema(settings)
 
     async with session_scope(settings) as session:
@@ -198,6 +216,9 @@ async def run_fixture(fixture: dict[str, Any], repository_path: Path) -> Evaluat
 
     observed = await observe(settings, task_id)
     outcome = score(fixture, observed)
+
+    if outcome.skipped:
+        return outcome
 
     async with session_scope(settings) as session:
         await EvaluationRepository(session).record(
@@ -219,13 +240,20 @@ async def main_async(selector: str | None, repository_path: Path) -> int:
     outcomes = [await run_fixture(fixture, repository_path) for fixture in fixtures]
     print("\n".join(outcome.render() for outcome in outcomes))
 
-    passed = sum(1 for outcome in outcomes if outcome.passed)
-    print(f"\n{passed}/{len(outcomes)} fixtures passed")
+    # Skipped fixtures are not failures and must not be counted as passes.
+    scored = [outcome for outcome in outcomes if not outcome.skipped]
+    skipped = len(outcomes) - len(scored)
+    passed = sum(1 for outcome in scored if outcome.passed)
+
+    summary = f"\n{passed}/{len(scored)} scored fixtures passed"
+    if skipped:
+        summary += f" ({skipped} skipped - needs a real model)"
+    print(summary)
 
     from persistence.db import dispose_engine
 
     await dispose_engine()
-    return 0 if passed == len(outcomes) else 1
+    return 0 if passed == len(scored) else 1
 
 
 def main() -> int:

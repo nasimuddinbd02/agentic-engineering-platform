@@ -32,7 +32,7 @@ packages = [
     "persistence", "persistence.models", "persistence.repositories",
     "infrastructure", "infrastructure.queue", "infrastructure.events", "infrastructure.locks",
     "llm", "agents", "graph",
-    "tools", "tools.filesystem", "tools.repository", "tools.git", "tools.testing", "tools.ci",
+    "tools", "tools.filesystem", "tools.repository", "tools.git", "tools.testing",
     "providers", "providers.scm", "providers.ci",
     "retrieval", "retrieval.ingestion", "retrieval.search",
     "policies",
@@ -50,3 +50,19 @@ markers = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+# docs/ holds the design document; its code blocks are the spec, not our source.
+exclude = [".venv", ".sandbox", "apps/web", "sample-repo", "docs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "FURB", "BLE", "C4"]
+ignore = [
+    # FastAPI's dependency-injection idiom is `param = Depends(...)` in the
+    # signature; B008 flags every route handler in the project.
+    "B008",
+    # Long lines inside docstrings and ASCII diagrams are deliberate.
+    "E501",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests assert on broad behaviour and re-import inside functions on purpose.
+"tests/**" = ["BLE001"]

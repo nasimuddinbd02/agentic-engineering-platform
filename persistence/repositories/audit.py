@@ -6,8 +6,6 @@ append-only.
 
 from __future__ import annotations
 
-from datetime import datetime
-
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -178,7 +176,9 @@ class FileChangeRepository:
         return change
 
     async def list(self, task_id: str) -> list[FileChange]:
-        stmt = select(FileChange).where(FileChange.task_id == task_id).order_by(FileChange.created_at)
+        stmt = (
+            select(FileChange).where(FileChange.task_id == task_id).order_by(FileChange.created_at)
+        )
         return list((await self.session.scalars(stmt)).all())
 
 

@@ -21,10 +21,14 @@ MAX_SUBJECT = 72
 
 def commit_message(state: AgentState) -> str:
     summary = (
-        state.get("implementation_summary")
-        or state.get("plan_summary")
-        or state.get("issue", "agent change")
-    ).strip().splitlines()[0]
+        (
+            state.get("implementation_summary")
+            or state.get("plan_summary")
+            or state.get("issue", "agent change")
+        )
+        .strip()
+        .splitlines()[0]
+    )
     subject = summary if len(summary) <= MAX_SUBJECT else summary[: MAX_SUBJECT - 3] + "..."
 
     criteria = "\n".join(f"- {item}" for item in state.get("acceptance_criteria", []))
@@ -71,7 +75,8 @@ def pull_request_body(state: AgentState) -> str:
         f"- Debug iterations: {state.get('iteration', 0)}",
         "",
         "## Policy",
-        "\n".join(f"- {finding}" for finding in state.get("policy_findings", [])) or "- no findings",
+        "\n".join(f"- {finding}" for finding in state.get("policy_findings", []))
+        or "- no findings",
         "",
         "---",
         "Opened by the AI Software Engineering Agent. A human must review and merge.",
@@ -91,10 +96,14 @@ async def open_pull_request(
     branch = state.get("git_branch", "")
     await provider.push_branch(workspace_path, branch)
     title = (
-        state.get("implementation_summary")
-        or state.get("plan_summary")
-        or f"Agent change for {state.get('task_id', '')}"
-    ).strip().splitlines()[0][:MAX_SUBJECT]
+        (
+            state.get("implementation_summary")
+            or state.get("plan_summary")
+            or f"Agent change for {state.get('task_id', '')}"
+        )
+        .strip()
+        .splitlines()[0][:MAX_SUBJECT]
+    )
     return await provider.create_pull_request(
         branch=branch, title=title, body=pull_request_body(state)
     )

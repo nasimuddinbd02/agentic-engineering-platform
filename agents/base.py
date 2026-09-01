@@ -114,9 +114,7 @@ class Agent:
                 if result.data.get("path"):
                     outcome.files_touched.append(result.data)
                 results.append(
-                    tool_result_block(
-                        invocation.id, result.content, is_error=not result.ok
-                    )
+                    tool_result_block(invocation.id, result.content, is_error=not result.ok)
                 )
             messages.append(tool_result_message(results))
 
@@ -156,7 +154,9 @@ class Agent:
                 await self._audit(name, arguments, ToolResult.failure(message), started)
                 raise PolicyViolationError(message)
 
-        await context.emit(EventType.TOOL_CALLED, tool=name, arguments=_preview_arguments(arguments))
+        await context.emit(
+            EventType.TOOL_CALLED, tool=name, arguments=_preview_arguments(arguments)
+        )
 
         # Gate 3: the workspace boundary, enforced inside the tool itself.
         try:
@@ -165,7 +165,9 @@ class Agent:
             result = ToolResult.failure(f"workspace violation: {exc}")
         except TypeError as exc:
             result = ToolResult.failure(f"invalid arguments for {name}: {exc}")
-        except Exception as exc:  # noqa: BLE001 - a tool failure must not kill the run
+        # A tool blowing up is reported back to the model as an error result,
+        # not raised: the agent gets a chance to correct itself.
+        except Exception as exc:
             log.exception("tool.unhandled_error", tool=name)
             result = ToolResult.failure(f"{type(exc).__name__}: {exc}")
 
@@ -221,7 +223,7 @@ def parse_json_payload(outcome: AgentOutcome) -> dict[str, Any]:
     if not text:
         return {}
     fenced = text.split("```")
-    for candidate in ([text] + fenced):
+    for candidate in [text, *fenced]:
         cleaned = candidate.strip().removeprefix("json").strip()
         start, end = cleaned.find("{"), cleaned.rfind("}")
         if start == -1 or end <= start:

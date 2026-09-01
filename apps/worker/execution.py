@@ -139,9 +139,7 @@ class TaskExecutor:
         if snapshot.get("workspace_path") and snapshot.get("branch"):
             existing = Path(snapshot["workspace_path"])
             if existing.is_dir():
-                await self.workspaces.adopt(
-                    task_id, existing, snapshot["branch"], repository_path
-                )
+                await self.workspaces.adopt(task_id, existing, snapshot["branch"], repository_path)
 
         await context.emit(
             EventType.TASK_CLAIMED, worker=self.worker_id, workflow_run_id=workflow_run_id
@@ -149,9 +147,7 @@ class TaskExecutor:
 
         try:
             workflow = build_workflow(context)
-            final_state = await workflow.ainvoke(
-                state, config={"recursion_limit": RECURSION_LIMIT}
-            )
+            final_state = await workflow.ainvoke(state, config={"recursion_limit": RECURSION_LIMIT})
         except GraphRecursionError as exc:
             # The state-based bounds should stop the loops long before this; if
             # the backstop fires it is a routing bug, so escalate rather than
@@ -170,7 +166,8 @@ class TaskExecutor:
             )
             await context.close()
             return result
-        except Exception as exc:  # noqa: BLE001 - the task fails, the worker lives
+        # The task fails; the worker lives to take the next one.
+        except Exception as exc:
             log.exception("workflow.failed", task_id=task_id)
             await self._finalize_failure(task_id, str(exc))
             await context.emit(EventType.TASK_FAILED, error=str(exc))

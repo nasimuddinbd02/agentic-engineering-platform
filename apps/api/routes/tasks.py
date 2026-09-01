@@ -2,7 +2,16 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, Response, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    Header,
+    HTTPException,
+    Query,
+    Response,
+    status,
+)
 
 from apps.api.dependencies import get_task_service, settings_dependency
 from apps.api.schemas import (
@@ -92,7 +101,9 @@ async def get_diff(task_id: str, service: TaskService = Depends(get_task_service
 
 
 @router.get("/{task_id}/logs", response_model=list[ToolCallOut])
-async def get_logs(task_id: str, service: TaskService = Depends(get_task_service)) -> list[ToolCallOut]:
+async def get_logs(
+    task_id: str, service: TaskService = Depends(get_task_service)
+) -> list[ToolCallOut]:
     try:
         detail = await service.detail(task_id)
     except TaskNotFoundError as exc:

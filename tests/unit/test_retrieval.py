@@ -57,7 +57,9 @@ def test_csharp_symbols_are_extracted() -> None:
 
 
 def test_control_flow_keywords_are_not_symbols() -> None:
-    source = "public class A\n{\n    void M()\n    {\n        if (x)\n        {\n        }\n    }\n}\n"
+    source = (
+        "public class A\n{\n    void M()\n    {\n        if (x)\n        {\n        }\n    }\n}\n"
+    )
     names = {symbol.name for symbol in parse_symbols("A.cs", source)}
     assert "if" not in names
 
@@ -136,8 +138,12 @@ def make_chunk(identifier: str, path: str, symbol: str | None, content: str) -> 
 def chunks() -> list[CodeChunk]:
     return [
         make_chunk("c1", "Services/OrderService.cs", "CancelOrder", CSHARP),
-        make_chunk("c2", "Services/PaymentService.cs", "RefundOrder", "public void RefundOrder() { }"),
-        make_chunk("c3", "Controllers/HomeController.cs", "Index", "public IActionResult Index() { }"),
+        make_chunk(
+            "c2", "Services/PaymentService.cs", "RefundOrder", "public void RefundOrder() { }"
+        ),
+        make_chunk(
+            "c3", "Controllers/HomeController.cs", "Index", "public IActionResult Index() { }"
+        ),
         make_chunk(
             "c4",
             "Tests/OrderServiceTests.cs",

@@ -9,7 +9,7 @@ these patterns so search and RAG chunking agree on what a symbol is.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from retrieval.ingestion.parser import Symbol, parse_symbols
 from tools.base import Tool, ToolContext, ToolResult
@@ -36,7 +36,7 @@ class FindSymbolTool(Tool):
         "Find where a class, interface, record, method or function is DEFINED. "
         "Use this after search_code to jump straight to a definition."
     )
-    input_schema: dict[str, Any] = {
+    input_schema: ClassVar[dict[str, Any]] = {
         "type": "object",
         "properties": {
             "symbol": {"type": "string", "description": "Symbol name, e.g. 'OrderService'."}
@@ -48,9 +48,7 @@ class FindSymbolTool(Tool):
     async def run(self, context: ToolContext, *, symbol: str, **_: Any) -> ToolResult:
         needle = symbol.strip()
         hits = [
-            found
-            for found in index_symbols(context.root)
-            if found.name.lower() == needle.lower()
+            found for found in index_symbols(context.root) if found.name.lower() == needle.lower()
         ]
         if not hits:
             partial = [
@@ -76,11 +74,9 @@ class FindSymbolTool(Tool):
 class FindReferencesTool(Tool):
     name = "find_references"
     description = "Find call sites and other references to a symbol across the repository."
-    input_schema: dict[str, Any] = {
+    input_schema: ClassVar[dict[str, Any]] = {
         "type": "object",
-        "properties": {
-            "symbol": {"type": "string", "description": "Symbol name to look for."}
-        },
+        "properties": {"symbol": {"type": "string", "description": "Symbol name to look for."}},
         "required": ["symbol"],
         "additionalProperties": False,
     }

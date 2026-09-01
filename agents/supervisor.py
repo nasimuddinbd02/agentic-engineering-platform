@@ -81,8 +81,13 @@ class Supervisor:
             except TransientInfrastructureError as exc:
                 log.warning("node.transient_failure", node=node_name, error=str(exc))
                 await self.context.finish_agent_run(run_id, status="FAILED", error=str(exc))
-                merged = {"halt_reason": f"infrastructure error in {node_name}: {exc}", "error": str(exc)}
-            except Exception as exc:  # noqa: BLE001 - one node must not kill the worker
+                merged = {
+                    "halt_reason": f"infrastructure error in {node_name}: {exc}",
+                    "error": str(exc),
+                }
+            # One failing node must not kill the worker; it becomes a routing
+            # decision instead (section 51).
+            except Exception as exc:
                 log.exception("node.failed", node=node_name)
                 await self.context.finish_agent_run(run_id, status="FAILED", error=str(exc))
                 merged = {

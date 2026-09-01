@@ -89,10 +89,8 @@ async def run_command(
         raise WorkspaceViolationError(f"executable not found: {command[0]}") from exc
 
     try:
-        stdout_bytes, stderr_bytes = await asyncio.wait_for(
-            process.communicate(), timeout=timeout
-        )
-    except (TimeoutError, asyncio.TimeoutError):
+        stdout_bytes, stderr_bytes = await asyncio.wait_for(process.communicate(), timeout=timeout)
+    except TimeoutError:
         timed_out = True
         process.kill()
         stdout_bytes, stderr_bytes = await process.communicate()

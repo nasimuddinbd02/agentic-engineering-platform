@@ -80,9 +80,7 @@ def tool_result_message(results: list[dict[str, Any]]) -> dict[str, Any]:
     return {"role": "user", "content": results}
 
 
-def tool_result_block(
-    tool_use_id: str, content: str, *, is_error: bool = False
-) -> dict[str, Any]:
+def tool_result_block(tool_use_id: str, content: str, *, is_error: bool = False) -> dict[str, Any]:
     block: dict[str, Any] = {
         "type": "tool_result",
         "tool_use_id": tool_use_id,

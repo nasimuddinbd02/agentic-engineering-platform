@@ -10,14 +10,31 @@ import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from tools.base import Tool, ToolContext, ToolResult
 
 SKIP_DIRECTORIES = {".git", "bin", "obj", "node_modules", ".vs", "__pycache__", ".next", "packages"}
 TEXT_SUFFIXES = {
-    ".cs", ".csproj", ".sln", ".json", ".xml", ".config", ".md", ".yml", ".yaml",
-    ".py", ".ts", ".tsx", ".js", ".jsx", ".sql", ".sh", ".props", ".targets", ".txt",
+    ".cs",
+    ".csproj",
+    ".sln",
+    ".json",
+    ".xml",
+    ".config",
+    ".md",
+    ".yml",
+    ".yaml",
+    ".py",
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    ".sql",
+    ".sh",
+    ".props",
+    ".targets",
+    ".txt",
 }
 MAX_MATCHES = 60
 MAX_FILE_BYTES = 2_000_000
@@ -120,7 +137,7 @@ class SearchCodeTool(Tool):
         "Search the repository for a regular expression. Returns path:line matches. "
         "This is the fastest way to locate relevant code - start here."
     )
-    input_schema: dict[str, Any] = {
+    input_schema: ClassVar[dict[str, Any]] = {
         "type": "object",
         "properties": {
             "pattern": {"type": "string", "description": "Regular expression, case-insensitive."},

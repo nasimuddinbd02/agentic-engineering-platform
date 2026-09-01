@@ -9,12 +9,12 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from core.errors import WorkspaceViolationError
+from retrieval.ingestion.parser import language_of
 from tools.base import Tool, ToolContext, ToolResult
 from tools.repository.search_code import iter_source_files
-from retrieval.ingestion.parser import language_of
 
 _CSHARP_USING = re.compile(r"^\s*using\s+(?:static\s+)?([A-Za-z_][\w\.]*)\s*;")
 _CSHARP_TYPE_REF = re.compile(r"\b([A-Z][A-Za-z0-9_]{2,})\b")
@@ -50,11 +50,9 @@ class GetDependenciesTool(Tool):
         "Show what a file imports and which other files reference the types it declares. "
         "Use it to understand the blast radius of a change before editing."
     )
-    input_schema: dict[str, Any] = {
+    input_schema: ClassVar[dict[str, Any]] = {
         "type": "object",
-        "properties": {
-            "path": {"type": "string", "description": "Repository-relative file path."}
-        },
+        "properties": {"path": {"type": "string", "description": "Repository-relative file path."}},
         "required": ["path"],
         "additionalProperties": False,
     }
@@ -96,9 +94,5 @@ class GetDependenciesTool(Tool):
         lines = [f"file: {context.relative(target)}"]
         lines.append("declares: " + (", ".join(sorted(declared)) or "(no types)"))
         lines.append("imports: " + (", ".join(outgoing) or "(none)"))
-        lines.append(
-            "referenced by: " + (", ".join(sorted(dependents)[:25]) or "(no other file)")
-        )
-        return ToolResult.success(
-            "\n".join(lines), files=sorted(dependents), imports=outgoing
-        )
+        lines.append("referenced by: " + (", ".join(sorted(dependents)[:25]) or "(no other file)"))
+        return ToolResult.success("\n".join(lines), files=sorted(dependents), imports=outgoing)

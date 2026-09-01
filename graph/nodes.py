@@ -26,7 +26,6 @@ from graph.context import WorkflowContext
 from graph.fingerprint import signatures_for
 from graph.routing import halt_reason
 from graph.state import AgentState
-from providers.ci.base import CIStatus
 from tools.base import ToolContext
 from tools.git.diff import collect_diff
 from tools.testing.test import detect_project_kind, parse_dotnet_output, run_dotnet_test
@@ -43,9 +42,7 @@ class Nodes:
     # ------------------------------------------------------------- helpers
 
     def _tool_context(self, state: AgentState, *, in_workspace: bool) -> ToolContext:
-        workspace = (
-            self.context.workspaces.try_get(state["task_id"]) if in_workspace else None
-        )
+        workspace = self.context.workspaces.try_get(state["task_id"]) if in_workspace else None
         return ToolContext(
             task_id=state["task_id"],
             repository_path=Path(state["repository_path"]),
@@ -87,9 +84,7 @@ class Nodes:
         """Reads the developer's repository, never writes to it (rule 9)."""
         agent = RepositoryAgent(self.context)
         result = await agent.analyze(state, self._tool_context(state, in_workspace=False))
-        await self.context.emit(
-            EventType.FILES_DISCOVERED, files=result.get("relevant_files", [])
-        )
+        await self.context.emit(EventType.FILES_DISCOVERED, files=result.get("relevant_files", []))
         return result
 
     async def risk_assessment(self, state: AgentState) -> dict[str, Any]:
@@ -262,7 +257,9 @@ class Nodes:
         except AgentPlatformError as exc:
             return {"halt_reason": f"commit failed: {exc}"}
         await self.context.emit(
-            EventType.COMMIT_CREATED, sha=sha, branch=workspace.branch,
+            EventType.COMMIT_CREATED,
+            sha=sha,
+            branch=workspace.branch,
             files=state.get("modified_files", []),
         )
         return {"commit_sha": sha, "git_branch": workspace.branch}
@@ -305,9 +302,7 @@ class Nodes:
         agent = CIAgent(self.context)
         working_state = dict(state)
         working_state["ci_iteration"] = iteration
-        result = await agent.diagnose(
-            working_state, self._tool_context(state, in_workspace=True)
-        )
+        result = await agent.diagnose(working_state, self._tool_context(state, in_workspace=True))
         update: dict[str, Any] = {
             "ci_iteration": iteration,
             "ci_analysis": result.get("ci_analysis", ""),
@@ -319,9 +314,7 @@ class Nodes:
     async def create_pr(self, state: AgentState) -> dict[str, Any]:
         workspace = self.context.workspaces.get(state["task_id"])
         pull_request = await open_pull_request(state, workspace.path, self.context.scm)
-        await self.context.emit(
-            EventType.PR_CREATED, url=pull_request.url, id=pull_request.id
-        )
+        await self.context.emit(EventType.PR_CREATED, url=pull_request.url, id=pull_request.id)
         return {"pull_request_url": pull_request.url}
 
     async def human_review(self, state: AgentState) -> dict[str, Any]:

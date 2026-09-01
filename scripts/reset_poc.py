@@ -31,9 +31,7 @@ def clear_directory(path: Path, label: str) -> None:
 def prune_worktrees(repository: Path) -> None:
     if not (repository / ".git").exists():
         return
-    subprocess.run(
-        ["git", "worktree", "prune"], cwd=repository, capture_output=True, check=False
-    )
+    subprocess.run(["git", "worktree", "prune"], cwd=repository, capture_output=True, check=False)
     listing = subprocess.run(
         ["git", "branch", "--list", "agent/*", "--format=%(refname:short)"],
         cwd=repository,

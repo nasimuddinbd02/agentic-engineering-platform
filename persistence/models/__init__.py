@@ -21,18 +21,18 @@ from persistence.models.base import Base, TimestampMixin
 from persistence.models.types import Embedding, JsonDict, JsonList, UtcDateTime
 
 __all__ = [
-    "Base",
-    "Task",
     "AgentRun",
-    "ToolCall",
-    "TaskEvent",
-    "FileChange",
     "Approval",
+    "Base",
     "CIRun",
-    "EvaluationResult",
-    "Repository",
     "CodeChunk",
+    "EvaluationResult",
+    "FileChange",
     "IdempotencyRecord",
+    "Repository",
+    "Task",
+    "TaskEvent",
+    "ToolCall",
 ]
 
 

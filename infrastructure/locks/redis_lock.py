@@ -30,14 +30,10 @@ class RedisLockManager(LockManager):
         return f"{self.prefix}:{name}"
 
     async def acquire(self, name: str, ttl_seconds: int, owner: str) -> bool:
-        return bool(
-            await self.redis.set(self._key(name), owner, nx=True, px=ttl_seconds * 1000)
-        )
+        return bool(await self.redis.set(self._key(name), owner, nx=True, px=ttl_seconds * 1000))
 
     async def renew(self, name: str, ttl_seconds: int, owner: str) -> bool:
-        result = await self.redis.eval(
-            _RENEW, 1, self._key(name), owner, str(ttl_seconds * 1000)
-        )
+        result = await self.redis.eval(_RENEW, 1, self._key(name), owner, str(ttl_seconds * 1000))
         return bool(result)
 
     async def release(self, name: str, owner: str) -> None:

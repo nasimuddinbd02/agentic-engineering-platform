@@ -20,7 +20,12 @@ class RepositoryRepository:
         self.session = session
 
     async def upsert(
-        self, *, url: str, path: str, default_branch: str = "main", languages: list[str] | None = None
+        self,
+        *,
+        url: str,
+        path: str,
+        default_branch: str = "main",
+        languages: list[str] | None = None,
     ) -> Repository:
         identifier = repository_id_for(url)
         repo = await self.session.get(Repository, identifier)

@@ -53,9 +53,7 @@ class AnthropicProvider(LLMProvider):
         # ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN / an `ant auth login` profile.
         try:
             self.client = (
-                anthropic.AsyncAnthropic(api_key=api_key)
-                if api_key
-                else anthropic.AsyncAnthropic()
+                anthropic.AsyncAnthropic(api_key=api_key) if api_key else anthropic.AsyncAnthropic()
             )
         except Exception as exc:  # pragma: no cover - constructor rarely fails
             raise ConfigurationError(f"cannot construct Anthropic client: {exc}") from exc

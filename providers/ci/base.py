@@ -45,7 +45,9 @@ class CIPipelineProvider(ABC):
     @abstractmethod
     async def get_logs(self, run_id: str) -> str: ...
 
-    async def wait(self, run_id: str, *, timeout_seconds: int = 900, poll_seconds: int = 10) -> CIRunResult:
+    async def wait(
+        self, run_id: str, *, timeout_seconds: int = 900, poll_seconds: int = 10
+    ) -> CIRunResult:
         """Poll until the run finishes (section 26 - webhook or polling)."""
         import asyncio
         import time

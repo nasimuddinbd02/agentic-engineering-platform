@@ -12,7 +12,6 @@ from core.domain import PolicyAction, RiskLevel
 from policies.evaluator import PolicyEngine, added_lines_of
 
 
-
 @pytest.fixture
 def engine() -> PolicyEngine:
     return PolicyEngine.from_file()

@@ -19,7 +19,6 @@ from infrastructure.queue.memory_queue import MemoryTaskQueue
 from persistence.db import session_scope
 from persistence.repositories import TaskRepository
 
-
 # ------------------------------------------------------------------- queue
 
 

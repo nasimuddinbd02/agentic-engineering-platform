@@ -44,7 +44,9 @@ class LexicalIndex:
 
     def __init__(self, chunks: list[CodeChunk]) -> None:
         self.chunks = chunks
-        self.documents = [tokenize(f"{c.file_path} {c.symbol_name or ''} {c.content}") for c in chunks]
+        self.documents = [
+            tokenize(f"{c.file_path} {c.symbol_name or ''} {c.content}") for c in chunks
+        ]
         self.frequencies = [Counter(document) for document in self.documents]
         self.lengths = [len(document) for document in self.documents]
         self.average_length = (sum(self.lengths) / len(self.lengths)) if self.lengths else 0.0

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 
 from core.errors import WorkspaceViolationError
 from tools.base import Tool, ToolContext, ToolResult
@@ -16,7 +16,7 @@ class ReadFileTool(Tool):
         "Read a UTF-8 text file from the task workspace. Paths are relative to the "
         "repository root. Returns the file with 1-based line numbers."
     )
-    input_schema: dict[str, Any] = {
+    input_schema: ClassVar[dict[str, Any]] = {
         "type": "object",
         "properties": {
             "path": {"type": "string", "description": "Repository-relative file path."},

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from tools.base import Tool, ToolContext, ToolResult
 from tools.runner import run_command
@@ -21,7 +21,9 @@ class DiffSummary:
 async def collect_diff(workspace_path: Path, timeout: int = 120) -> DiffSummary:
     """Diff of everything in the worktree, tracked and untracked alike."""
     # Stage intent-to-add so new files show up in `git diff` without committing.
-    await run_command(["git", "add", "--intent-to-add", "--all"], cwd=workspace_path, timeout=timeout)
+    await run_command(
+        ["git", "add", "--intent-to-add", "--all"], cwd=workspace_path, timeout=timeout
+    )
     diff_result = await run_command(["git", "diff", "HEAD"], cwd=workspace_path, timeout=timeout)
     name_status = await run_command(
         ["git", "diff", "--name-status", "HEAD"], cwd=workspace_path, timeout=timeout
@@ -54,7 +56,7 @@ async def collect_diff(workspace_path: Path, timeout: int = 120) -> DiffSummary:
 class GitDiffTool(Tool):
     name = "git_diff"
     description = "Show the unified diff of all changes made in this task's workspace."
-    input_schema: dict[str, Any] = {
+    input_schema: ClassVar[dict[str, Any]] = {
         "type": "object",
         "properties": {},
         "additionalProperties": False,
@@ -77,7 +79,7 @@ class GitDiffTool(Tool):
 class GitStatusTool(Tool):
     name = "git_status"
     description = "List files changed in this task's workspace, without the diff body."
-    input_schema: dict[str, Any] = {
+    input_schema: ClassVar[dict[str, Any]] = {
         "type": "object",
         "properties": {},
         "additionalProperties": False,

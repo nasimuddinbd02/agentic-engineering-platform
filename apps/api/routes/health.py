@@ -23,9 +23,7 @@ async def live() -> HealthOut:
 
 
 @router.get("/health/ready", response_model=HealthOut)
-async def ready(
-    response: Response, settings: Settings = Depends(settings_dependency)
-) -> HealthOut:
+async def ready(response: Response, settings: Settings = Depends(settings_dependency)) -> HealthOut:
     checks: dict[str, str] = {}
 
     try:

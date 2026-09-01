@@ -51,6 +51,10 @@ api: ## Run the API (http://localhost:8000/docs)
 worker: ## Run one agent worker; run this in several terminals to scale out
 	$(BIN)/python -m apps.worker.main
 
+.PHONY: run-local
+run-local: ## API + worker in one process (needed when REDIS_URL=memory://)
+	$(BIN)/python -m scripts.run_local
+
 .PHONY: web
 web: ## Run the Next.js UI (http://localhost:3000)
 	cd apps/web && npm install && npm run dev

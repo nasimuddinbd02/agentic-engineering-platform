@@ -8,8 +8,20 @@ from pathlib import Path
 from retrieval.ingestion.parser import language_of
 
 SKIP_DIRECTORIES = {
-    ".git", "bin", "obj", "node_modules", ".vs", ".idea", "__pycache__",
-    ".next", "dist", "build", "packages", ".venv", "venv", "TestResults",
+    ".git",
+    "bin",
+    "obj",
+    "node_modules",
+    ".vs",
+    ".idea",
+    "__pycache__",
+    ".next",
+    "dist",
+    "build",
+    "packages",
+    ".venv",
+    "venv",
+    "TestResults",
 }
 INDEXABLE_SUFFIXES = {".cs", ".py", ".ts", ".tsx", ".js", ".jsx", ".sql", ".md"}
 MAX_FILE_BYTES = 1_000_000
