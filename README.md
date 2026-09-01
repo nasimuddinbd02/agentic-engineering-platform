@@ -1,7 +1,7 @@
 # AI Software Engineering Agent
 
 An **engineering control plane around a coding-capable LLM**, implemented from
-[AI_Software_Engineering_Agent_POC_Architecture.md](docs/AI_Software_Engineering_Agent_POC_Architecture.md).
+[docs/Requirements.md](docs/Requirements.md).
 
 The model reasons. The platform decides what the model is allowed to do, runs
 the things whose answers must be trustworthy, records everything, and stops the

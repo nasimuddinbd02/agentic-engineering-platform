@@ -535,7 +535,6 @@ Create one explicit state contract.
 ``` python
 from typing import TypedDict
 
-
 class AgentState(TypedDict, total=False):
     task_id: str
 
@@ -2349,7 +2348,8 @@ Create:
 
 ``` python
 class LLMProvider:
-    def generate(self, messages, tools=None): ...
+    def generate(self, messages, tools=None):
+        ...
 ```
 
 Implement a provider adapter.
